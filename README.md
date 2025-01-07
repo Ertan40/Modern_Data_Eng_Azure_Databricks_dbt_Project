@@ -94,5 +94,63 @@ You will need to search for “Databricks” in the search bar or find it in the
   <p><img src="images/23.databricks_success.jpg" alt="23.databricks_success" width="800px"></p>
   <p><img src="images/24_catalog_db_loaded_successfully.jpg" alt="24_catalog_db_loaded_successfully" width="800px"></p>
 
-  
+## <ins>DBT Transformation into Silver Layer</ins>
+We’ll be using dbt to perform transformation of the data in our databricks saleslt catalog, into the silver layer
+
+- Databricks and DBT Initialisation: start by installing the required dependencies on our system.
+```sh
+pip install dbt-databricks databricks-cli
+```
+- When the installation is completed then we need to link our local databricks to Azure databricks. You can do this by running:
+```sh
+databricks configure --token
+```
+- This is successful, you can run databricks secrets list-scopes to see if you can see the secret scope created earlier. If you’re able to see it, then you’re good to go!
+You can also run below command to see the list of volumes and directories in your hivemetastore.
+```sh
+databricks fs ls
+```
+- You can setup your DBT project by running the command below and filling the required details.
+```sh
+dbt init
+```
+- You can get your server hostname and HTTP path on your databricks compute > advanced options > jdbc/odbc
+- To verify that that your dbt setup is correct, run the command below
+```sh
+dbt debug
+```
+- If you see this output, you’re good to go!
+  <p><img src="images/25.dbt_setup_done.jpg" alt="25.dbt_setup_done" width="800px"></p>
+- Before running the snapshot, you also need to create a file called bronze.yml in the models > staging directory
+- To take this for a spin, you can run:
+```sh
+dbt snapshot
+```
+- And your saleslt database on databricks catalog should look like this
+  <p><img src="images/26.dbt_to_databricks_done.jpg" alt="26.dbt_to_databricks_done" width="800px"></p>
+- If you check your silver layer on your storage account, you should have data populated
+  <p><img src="images/26.1.silver_uploaded.jpg" alt="26.1.silver_uploaded" width="800px"></p>
+
+## <ins>DBT Data Transformation into Gold Layer</ins>
+In the models folder, create a folder called marts and get these sub folders into it, customer, product, and sales . Then create .sql and .yml files in each of the folders. The .sql file will be the transformation while the .yml will the structure/schema of the final transformation.
+
+- Once these have been populated, run the command below:
+```sh
+dbt run
+```
+- And your catalog should look like this:
+  <p><img src="images/27.gold_done.jpg" alt="27.gold_done" width="800px"></p>
+- Now in your gold storage account, you should have:
+  <p><img src="images/28.gold_part2.jpg" alt="28.gold_part2" width="800px"></p>
+
+## <ins>DBT Data Transformation into Gold Layer</ins>
+To generate and view the documentation of the transformation, you can run:
+```sh
+dbt docs generate
+dbt docs serve
+```
+- Documentation Webpage:
+  <p><img src="images/32.dbt_ok.jpg" alt="32.dbt_ok" width="800px"></p>
+- Lineage Graph: You can also view the lineage graphs of each of the transformation done with DBT.
+  <p><img src="images/28.gold_part2.jpg" alt="28.gold_part2" width="800px"></p>
 

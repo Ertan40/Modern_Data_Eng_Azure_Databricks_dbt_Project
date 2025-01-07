@@ -67,6 +67,32 @@ WHERE TABLE_TYPE = 'BASE TABLE' and TABLE_SCHEMA = 'SalesLT';
 
 - So the data was uploaded successfully into the bronze layer.
 
+## <ins>Setting up Databricks</ins>
+You will need to search for “Databricks” in the search bar or find it in the navigation pane. Ensure you select and fill in the required details and once the deployment is complete, go to the resource and click on the “Launch Workspace” button. This will open the Azure Databricks workspace in a new tab.
+
+- To setup Databricks on Azure, search for “Databricks” in the search bar. Ensure you select and fill in the required details and once the deployment is complete, go to the resource and click on the “Launch Workspace” button.
+  
+- Linking Key Vault to Azure Databricks:  Key Vault holds all your secrets, to add the secrets you need to connect databricks to the DNS and Resource endpoint of Key Vault. This can be done by adding #secrets/createScope at the end of your workspace url.
+  <p><img src="images/21.2.jpg" alt="21.2" width="800px"></p>
+- Go to key vault and create a secret  
+  <p><img src="images/20.Create_secret.jpg" alt="20.Create_secret" width="800px"></p>
+- To get the DNS Name and Resource ID, you can get this in your Key Vault properties. (Key Vaults > [Key vault name] > Settings > Properties). The Vault URI is the DNS Name and Resource ID is the Resource ID
+  <p><img src="images/21.1.jpg" alt="21.1" width="800px"></p>
+- In order to work with Databricks, you have to check the connection  whether was successful and you have to mount the storage account directories. You can find the code under the name BaseNotebook in the Notebooks folder.
+- Second notebook will be using table schema to create a database if it doesn’t exist (saleslt in our case) and the individual tables as well using the parquest dumped into the bronze layer.
+- Before move back to Data Factory. We need to setup the access token that will be used to connect to our Databricks. You can get this under profile > user settings > developer > generate access token.
+- Now, we can go back to our Pipeline with our access token, we can now connect our Notebook to Databricks. We need to create a new linked service for our Azure Databricks account. This can be done by click on the Azure Databricks Tab and New . Fill in the details and the token generated earlier to continue.
+  <p><img src="images/22.connection_adf_databricks.jpg" alt="22.connection_adf_databricks" width="800px"></p>
+- Select the Notebook (in our case, bronze to catalog db) and add the parameters that will be sent across while running the notebook. Here are the parameters table_schema, table_name, fileName and here are the values
+```sql
+@item().table_schema
+@item().table_name
+@formatDateTime(utcNow(), 'yyyy-MM-dd')
+```
+  <p><img src="images/22.1.parameters.jpg" alt="22.1.parameters" width="800px"></p>
+- If you trigger the pipeline if there are no errors, our data should be loaded properly.
+  <p><img src="images/23.databricks_success.jpg" alt="23.databricks_success" width="800px"></p>
+  <p><img src="images/24_catalog_db_loaded_successfully.jpg" alt="24_catalog_db_loaded_successfully" width="800px"></p>
 
   
 

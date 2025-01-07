@@ -33,7 +33,6 @@ Once all the setup is done, the next thing is to start creating pipelines on ADF
   Dynamic Content allows us to have a parameterised placeholder in our pipeline. We’ll be creating two datasets, TablesQuery and SqlTable each of which will help us fetch data from the SQL database dynamically and with parameters.
 * TablesQuery: You can create a new dataset using the AzureSqlDatabase1 linked service created earlier to fetch the list of tables from the information schema on our DB dynamically. We create this dataset without selecting a table name.
 * SqlTable: We’ll also need to create the SqlTable dataset using the AzureSqlDatabase1 linked service as well. This will also be done without selecting a table name but with parameters
-  <p><img src="images/10.jpg" alt="10" width="800px"></p>
   <p><img src="images/12.set_parameters.jpg" alt="12.set_parameters" width="800px"></p>
   <p><img src="images/15.SqlTable_done.jpg" alt="15.SqlTable_done" width="800px"></p>
 - Going back to the pipeline, we’ll need to drag the lookup activity to the pipeline plane and in there, we’ll configure the lookup to use the TablesQuery dataset. In the settings section, we’ll select the Query radio button and pass in our query:
@@ -45,7 +44,7 @@ WHERE TABLE_TYPE = 'BASE TABLE' and TABLE_SCHEMA = 'SalesLT';
 
 - Iterating through the Lookup Results and ForEach Activity: The foreach activity give us access to individual records in the array of tables information from the lookup. So we drag and drop ForEach activity into the pipeline we configure the items using dynamic content.
 - Dumping Table Records into the Bronze Layer: Once the ForEach activity is configured to use the @activity(‘Fetch All Tables’).output.value , the next thing is to configure the operations that will be happening to each of the items in the array. So we drag in Copy Data activity from the move and transform section into the for each sub-pipeline
-<p><img src="images/10..jpg" alt="10" width="800px"></p>
+<p><img src="images/10..jpg" alt="10." width="800px"></p>
 - This is configured to use the second dataset created (SqlTable) which allows parameters to be passed into it. Here’s the source configuration.
 <p><img src="images/13.set_parameters_name.jpg" alt="13.set_parameters_name" width="800px"></p>
 

@@ -67,6 +67,90 @@ WHERE TABLE_TYPE = 'BASE TABLE' and TABLE_SCHEMA = 'SalesLT';
 
 - So the data was uploaded successfully into the bronze layer.
 
+## <ins>Setting up Databricks</ins>
+You will need to search for “Databricks” in the search bar or find it in the navigation pane. Ensure you select and fill in the required details and once the deployment is complete, go to the resource and click on the “Launch Workspace” button. This will open the Azure Databricks workspace in a new tab.
 
+- To setup Databricks on Azure, search for “Databricks” in the search bar. Ensure you select and fill in the required details and once the deployment is complete, go to the resource and click on the “Launch Workspace” button.
   
+- Linking Key Vault to Azure Databricks:  Key Vault holds all your secrets, to add the secrets you need to connect databricks to the DNS and Resource endpoint of Key Vault. This can be done by adding #secrets/createScope at the end of your workspace url.
+  <p><img src="images/21.2.jpg" alt="21.2" width="800px"></p>
+- Go to key vault and create a secret  
+  <p><img src="images/20.Create_secret.jpg" alt="20.Create_secret" width="800px"></p>
+- To get the DNS Name and Resource ID, you can get this in your Key Vault properties. (Key Vaults > [Key vault name] > Settings > Properties). The Vault URI is the DNS Name and Resource ID is the Resource ID
+  <p><img src="images/21.1.jpg" alt="21.1" width="800px"></p>
+- In order to work with Databricks, you have to check the connection  whether was successful and you have to mount the storage account directories. You can find the code under the name BaseNotebook in the Notebooks folder.
+- Second notebook will be using table schema to create a database if it doesn’t exist (saleslt in our case) and the individual tables as well using the parquest dumped into the bronze layer.
+- Before move back to Data Factory. We need to setup the access token that will be used to connect to our Databricks. You can get this under profile > user settings > developer > generate access token.
+- Now, we can go back to our Pipeline with our access token, we can now connect our Notebook to Databricks. We need to create a new linked service for our Azure Databricks account. This can be done by click on the Azure Databricks Tab and New . Fill in the details and the token generated earlier to continue.
+  <p><img src="images/22.connection_adf_databricks.jpg" alt="22.connection_adf_databricks" width="800px"></p>
+- Select the Notebook (in our case, bronze to catalog db) and add the parameters that will be sent across while running the notebook. Here are the parameters table_schema, table_name, fileName and here are the values
+```sql
+@item().table_schema
+@item().table_name
+@formatDateTime(utcNow(), 'yyyy-MM-dd')
+```
+  <p><img src="images/22.1.parameters.jpg" alt="22.1.parameters" width="800px"></p>
+- If you trigger the pipeline if there are no errors, our data should be loaded properly.
+  <p><img src="images/23.databricks_success.jpg" alt="23.databricks_success" width="800px"></p>
+  <p><img src="images/24_catalog_db_loaded_successfully.jpg" alt="24_catalog_db_loaded_successfully" width="800px"></p>
+
+## <ins>DBT Transformation into Silver Layer</ins>
+We’ll be using dbt to perform transformation of the data in our databricks saleslt catalog, into the silver layer
+
+- Databricks and DBT Initialisation: start by installing the required dependencies on our system.
+```sh
+pip install dbt-databricks databricks-cli
+```
+- When the installation is completed then we need to link our local databricks to Azure databricks. You can do this by running:
+```sh
+databricks configure --token
+```
+- This is successful, you can run databricks secrets list-scopes to see if you can see the secret scope created earlier. If you’re able to see it, then you’re good to go!
+You can also run below command to see the list of volumes and directories in your hivemetastore.
+```sh
+databricks fs ls
+```
+- You can setup your DBT project by running the command below and filling the required details.
+```sh
+dbt init
+```
+- You can get your server hostname and HTTP path on your databricks compute > advanced options > jdbc/odbc
+- To verify that that your dbt setup is correct, run the command below
+```sh
+dbt debug
+```
+- If you see this output, you’re good to go!
+  <p><img src="images/25.dbt_setup_done.jpg" alt="25.dbt_setup_done" width="800px"></p>
+- Before running the snapshot, you also need to create a file called bronze.yml in the models > staging directory
+- To take this for a spin, you can run:
+```sh
+dbt snapshot
+```
+- And your saleslt database on databricks catalog should look like this
+  <p><img src="images/26.dbt_to_databricks_done.jpg" alt="26.dbt_to_databricks_done" width="800px"></p>
+- If you check your silver layer on your storage account, you should have data populated
+  <p><img src="images/26.1.silver_uploaded.jpg" alt="26.1.silver_uploaded" width="800px"></p>
+
+## <ins>DBT Data Transformation into Gold Layer</ins>
+In the models folder, create a folder called marts and get these sub folders into it, customer, product, and sales . Then create .sql and .yml files in each of the folders. The .sql file will be the transformation while the .yml will the structure/schema of the final transformation.
+
+- Once these have been populated, run the command below:
+```sh
+dbt run
+```
+- And your catalog should look like this:
+  <p><img src="images/27.gold_done.jpg" alt="27.gold_done" width="800px"></p>
+- Now in your gold storage account, you should have:
+  <p><img src="images/28.gold_part2.jpg" alt="28.gold_part2" width="800px"></p>
+
+## <ins>DBT Data Transformation into Gold Layer</ins>
+To generate and view the documentation of the transformation, you can run:
+```sh
+dbt docs generate
+dbt docs serve
+```
+- Documentation Webpage:
+  <p><img src="images/32.dbt_ok.jpg" alt="32.dbt_ok" width="800px"></p>
+- Lineage Graph: You can also view the lineage graphs of each of the transformation done with DBT.
+  <p><img src="images/28.gold_part2.jpg" alt="28.gold_part2" width="800px"></p>
 
